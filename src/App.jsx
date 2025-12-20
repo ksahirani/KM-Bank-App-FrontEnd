@@ -1,6 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+
+// Components
+import Layout from './components/Layout';
+import AdminLayout from './components/AdminLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
 import Login from './pages/Login';
@@ -8,24 +13,19 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Accounts from './pages/Accounts';
 import Transactions from './pages/Transactions';
+import Cards from './pages/Cards';
 import Settings from './pages/Settings';
 
-// Components
-import Layout from './components/Layout';
+// Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminAccounts from './pages/admin/AdminAccounts';
+import AdminTransactions from './pages/admin/AdminTransactions';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
 
-// Protected Route Component
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return <div className="loading">Loading...</div>;
-  }
-  return isAuthenticated ? children : <Navigate to="/login" />;
-};
-
-const App = () => {
-  return (
-    <BrowserRouter>
+function App() {
+    return (
+        <BrowserRouter>
             <AuthProvider>
                 <ToastProvider>
                     <Routes>
@@ -33,7 +33,7 @@ const App = () => {
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
 
-                        {/* Protected Routes */}
+                        {/* Protected User Routes */}
                         <Route path="/" element={
                             <ProtectedRoute>
                                 <Layout />
@@ -43,7 +43,21 @@ const App = () => {
                             <Route path="dashboard" element={<Dashboard />} />
                             <Route path="accounts" element={<Accounts />} />
                             <Route path="transactions" element={<Transactions />} />
+                            <Route path="cards" element={<Cards />} />
                             <Route path="settings" element={<Settings />} />
+                        </Route>
+
+                        {/* Protected Admin Routes */}
+                        <Route path="/admin" element={
+                            <ProtectedRoute adminOnly>
+                                <AdminLayout />
+                            </ProtectedRoute>
+                        }>
+                            <Route index element={<AdminDashboard />} />
+                            <Route path="users" element={<AdminUsers />} />
+                            <Route path="accounts" element={<AdminAccounts />} />
+                            <Route path="transactions" element={<AdminTransactions />} />
+                            <Route path="analytics" element={<AdminAnalytics />} />
                         </Route>
 
                         {/* Fallback */}
