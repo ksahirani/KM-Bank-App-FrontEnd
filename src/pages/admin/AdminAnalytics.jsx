@@ -1,7 +1,7 @@
 import { useState, useEffect, use } from "react";
 import { adminAPI } from "../../services/adminApi";
 import { useToast } from "../../context/ToastContext";
-import { Barchart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
 import { TrendingUp, TrendingDown, Users, Wallet } from "lucide-react";
 
 const  COLORS = ['#1e4d8c', '#d4af37', '#10b981', '#ef4444', '#8b5cf6'];

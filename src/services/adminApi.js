@@ -27,4 +27,5 @@ export const adminAPI = {
     getAnalytics: (period = 'month') => api.get(`/admin/analytics?period=${period}`),
 };
 
+export { adminAPI as adminApi };
 export default adminAPI;

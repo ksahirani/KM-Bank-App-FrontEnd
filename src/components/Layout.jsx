@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { LayoutDashboard, Wallet, ArrowLeftRight, Settings, Logout, Landmark, Shield } from "lucide-react";
+import { LayoutDashboard, Wallet, ArrowLeftRight, Settings, LogOut, Landmark, Shield } from "lucide-react";
 
 export default function Layout() {
     const { user, logout, isAdmin } = useAuth();
