@@ -1,21 +1,20 @@
-import { useState, useEffect } from "react";
-import { transactionAPI, accountAPI } from "../services/api";
-import { useToast } from "../context/ToastContext";
-import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight, Search, Filter } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { transactionAPI, accountAPI } from '../services/api';
+import { useToast } from '../context/ToastContext';
+import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from 'lucide-react';
 
 export default function Transactions() {
-  const [transactions, setTransactions] = useState([]);
-  const [accounts, setAccounts] = useState([]);
-  const [selectedAccount, setSelectedAccount] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-
-  const { error } = useToast();
+    const [transactions, setTransactions] = useState([]);
+    const [accounts, setAccounts] = useState([]);
+    const [selectedAccount, setSelectedAccount] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    
+    const { error } = useToast();
 
     useEffect(() => {
         fetchAccounts();
-        
     }, []);
 
     useEffect(() => {
@@ -27,63 +26,79 @@ export default function Transactions() {
     const fetchAccounts = async () => {
         try {
             const response = await accountAPI.getAccounts();
-            const accountsData = response.data.data;
+            const accountsData = response.data.data || [];
             setAccounts(accountsData);
             if (accountsData.length > 0) {
                 setSelectedAccount(accountsData[0].id);
+            } else {
+                setLoading(false);
             }
         } catch (err) {
-            error("Failed to fetch accounts.");
+            console.error('Failed to fetch accounts:', err);
+            error('Failed to fetch accounts');
+            setLoading(false);
         }
     };
 
     const fetchTransactions = async () => {
         setLoading(true);
         try {
-            const response = await transactionAPI.getTransactionsByAccount({
+            const response = await transactionAPI.getTransactions({
                 accountId: selectedAccount,
-                page,   
+                page,
                 size: 10,
             });
-            setTransactions(response.data.data.content);
-            setTotalPages(response.data.data.totalPages);
+            
+             console.log('Transactions response:', response.data);
+             
+            // Handle different response structures
+            const data = response.data.data;
+            if (data?.content) {
+                setTransactions(data.content);
+                setTotalPages(data.totalPages || 0);
+            } else if (Array.isArray(data)) {
+                setTransactions(data);
+                setTotalPages(1);
+            } else {
+                setTransactions([]);
+                setTotalPages(0);
+            }
         } catch (err) {
-            error("Failed to fetch transactions.");
+            
         } finally {
             setLoading(false);
         }
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat("en-PH", {
-            style: "currency",
-            currency: "PHP",
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
         }).format(amount || 0);
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString("en-PH", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
         });
     };
 
     const getTransactionIcon = (type) => {
         switch (type) {
             case 'DEPOSIT':
-                return <ArrowDownLeft className="tx-icon deposit" />;
+                return <ArrowDownLeft className="tx-icon deposit" size={20} />;
             case 'WITHDRAWAL':
-                return <ArrowUpRight className="tx-icon withdrawal" />;
-            case 'TRANSFER':
-                return <ArrowLeftRight className="tx-icon transfer" />;
+                return <ArrowUpRight className="tx-icon withdrawal" size={20} />;
             default:
-                return <ArrowLeftRight className="tx-icon" />;
+                return <ArrowLeftRight className="tx-icon transfer" size={20} />;
         }
     };
-    
+
     return (
         <>
             <header className="page-header">
@@ -97,28 +112,30 @@ export default function Transactions() {
 
             <div className="page-content">
                 {/* Account Filter */}
-                <div className="card">
-                    <div className="card-body">
-                        <div className="filters-row">
-                            <div className="form-group">
-                                <label>Select Account</label>
-                                <select
-                                    value={selectedAccount}
-                                    onChange={(e) => {
-                                        setSelectedAccount(e.target.value);
-                                        setPage(0);
-                                    }}
-                                >
-                                    {accounts.map((account) => (
-                                        <option key={account.id} value={account.id}>
-                                            {account.accountName} - {account.accountNumber}
-                                        </option>
-                                    ))}
-                                </select>
+                {accounts.length > 0 ? (
+                    <div className="card">
+                        <div className="card-body">
+                            <div className="filters-row">
+                                <div className="form-group">
+                                    <label>Select Account</label>
+                                    <select
+                                        value={selectedAccount}
+                                        onChange={(e) => {
+                                            setSelectedAccount(e.target.value);
+                                            setPage(0);
+                                        }}
+                                    >
+                                        {accounts.map((account) => (
+                                            <option key={account.id} value={account.id}>
+                                                {account.accountName} - {account.accountNumber}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                ) : null}
 
                 {/* Transactions List */}
                 <div className="card">
@@ -128,6 +145,10 @@ export default function Transactions() {
                     <div className="card-body">
                         {loading ? (
                             <div className="loading">Loading...</div>
+                        ) : accounts.length === 0 ? (
+                            <div className="empty-message">
+                                No accounts found. Create an account first to see transactions.
+                            </div>
                         ) : transactions.length > 0 ? (
                             <>
                                 <div className="transactions-table">
@@ -152,7 +173,7 @@ export default function Transactions() {
                                                         </div>
                                                     </td>
                                                     <td>{tx.description || '-'}</td>
-                                                    <td className="tx-reference">{tx.referenceNumber}</td>
+                                                    <td className="tx-reference">{tx.referenceNumber || '-'}</td>
                                                     <td>{formatDate(tx.createdAt)}</td>
                                                     <td className={`tx-amount ${tx.isCredit ? 'credit' : 'debit'}`}>
                                                         {tx.isCredit ? '+' : '-'}{formatCurrency(tx.amount)}
@@ -186,7 +207,7 @@ export default function Transactions() {
                                 )}
                             </>
                         ) : (
-                            <div className="empty-message">No transactions found</div>
+                            <div className="empty-message">No transactions found for this account.</div>
                         )}
                     </div>
                 </div>
