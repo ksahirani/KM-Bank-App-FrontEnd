@@ -5,7 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { User, Mail, Phone, Lock, Save } from 'lucide-react';
 
 export default function Settings() {
-    const  { user } = useAuth();
+    const  { user, refreshUser } = useAuth();
     const { success, error } = useToast();
 
     const [profileData, setProfileData] = useState({
@@ -35,13 +35,21 @@ export default function Settings() {
         }
     }, [user]);
 
-    const handleProfileChange = async (e) => {
+    const handleProfileSubmit = async (e) => {
         e.preventDefault();
         setLoadingProfile(true);
         try {
-            await userAPI.updateProfile(profileData);
+            await userAPI.updateProfile({
+                firstName: profileData.firstName,
+                lastName: profileData.lastName,
+                phoneNumber: profileData.phoneNumber,
+            });
+
+            await refreshUser();    
             success('Profile updated successfully');
+
         } catch (err) {
+            console.error('Profile update error:', err);
             error(err.response?.data?.message || 'Failed to update profile');
         } finally {
             setLoadingProfile(false);
