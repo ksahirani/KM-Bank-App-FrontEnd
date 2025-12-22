@@ -14,13 +14,19 @@ export default function Dashboard() {
 
     const fetchDashboardData = async () => {
         try {
-            const response = await dashboardAPI.getDashboardData();
+            const response = await dashboardAPI.getDashboard();
             setDashboardData(response.data.data);
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         } finally {
             setLoading(false);
         }
+    };
+        const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+        }).format(amount || 0);
     };
 
     if (loading) {
@@ -47,7 +53,7 @@ export default function Dashboard() {
                         </div>
                         <div className="stat-content">
                             <p className="stat-label">Total Balance</p>
-                            <h3 className="stat-value">{formatCurrency(dashboard?.totalBalance)}</h3>
+                            <h3 className="stat-value">{formatCurrency(dashboardData?.totalBalance)}</h3>
                         </div>
                     </div>
 
@@ -57,7 +63,7 @@ export default function Dashboard() {
                         </div>
                         <div className="stat-content">
                             <p className="stat-label">Monthly Income</p>
-                            <h3 className="stat-value">{formatCurrency(dashboard?.monthlyIncome)}</h3>
+                            <h3 className="stat-value">{formatCurrency(dashboardData?.monthlyIncome)}</h3>
                         </div>
                     </div>
 
@@ -67,7 +73,7 @@ export default function Dashboard() {
                         </div>
                         <div className="stat-content">
                             <p className="stat-label">Monthly Expenses</p>
-                            <h3 className="stat-value">{formatCurrency(dashboard?.monthlyExpenses)}</h3>
+                            <h3 className="stat-value">{formatCurrency(dashboardData?.monthlyExpenses)}</h3>
                         </div>
                     </div>
 
@@ -77,7 +83,7 @@ export default function Dashboard() {
                         </div>
                         <div className="stat-content">
                             <p className="stat-label">Transactions</p>
-                            <h3 className="stat-value">{dashboard?.totalTransactions || 0}</h3>
+                            <h3 className="stat-value">{dashboardData?.totalTransactions || 0}</h3>
                         </div>
                     </div>
                 </div>
@@ -88,9 +94,9 @@ export default function Dashboard() {
                         <h3 className="card-title">Your Accounts</h3>
                     </div>
                     <div className="card-body">
-                        {dashboard?.accounts?.length > 0 ? (
+                        {dashboardData?.accounts?.length > 0 ? (
                             <div className="accounts-list">
-                                {dashboard.accounts.map((account) => (
+                                {dashboardData.accounts.map((account) => (
                                     <div key={account.id} className="account-item">
                                         <div className="account-info">
                                             <h4>{account.accountName}</h4>
@@ -114,7 +120,7 @@ export default function Dashboard() {
                         <h3 className="card-title">Recent Transactions</h3>
                     </div>
                     <div className="card-body">
-                        {dashboard?.recentTransactions?.length > 0 ? (
+                        {dashboardData?.recentTransactions?.length > 0 ? (
                             <div className="transactions-list">
                                 {dashboard.recentTransactions.map((tx) => (
                                     <div key={tx.id} className="transaction-item">
