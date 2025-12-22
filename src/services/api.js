@@ -53,8 +53,11 @@ export const accountAPI = {
 
 // Transaction APIs
 export const transactionAPI = {
-    getTransactions: (accountId, page = 0, size = 10) => 
-        api.get(`/transactions?accountId=${accountId}&page=${page}&size=${size}`),
+    getTransactions: (params) => {
+      const { accountId, page = 0, size = 10 } = params;
+      return api.get(`/transactions?accountId=${accountId}&page=${page}&size=${size}`);
+    },
+    getTransaction: (id) => api.get(`/transactions/${id}`),    
     deposit: (data) => api.post('/transactions/deposit', data),
     withdraw: (data) => api.post('/transactions/withdraw', data),
     transfer: (data) => api.post('/transactions/transfer', data),
@@ -63,7 +66,7 @@ export const transactionAPI = {
 // User APIs
 export const userAPI = {
     getProfile: () => api.get('/users/me'),
-    updateProfile: (data) => api.put('/users/me', data),
+    updateProfile: (data) => api.patch('/users/me', data),
     changePassword: (data) => api.put('/users/me/password', data),
 };
 
