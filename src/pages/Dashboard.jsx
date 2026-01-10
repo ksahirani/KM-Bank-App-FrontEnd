@@ -1,4 +1,4 @@
-import { useState, useEffect }  from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { dashboardAPI } from '../services/api';
 import { Wallet, TrendingUp, TrendingDown, ArrowLeftRight } from 'lucide-react';
@@ -7,30 +7,46 @@ export default function Dashboard() {
     const { user } = useAuth();
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
-    
+    const [error, setError] = useState(null);
+
     useEffect(() => {
-        fetchDashboardData();
+        fetchDashboard();
     }, []);
 
-    const fetchDashboardData = async () => {
+    const fetchDashboard = async () => {
         try {
             const response = await dashboardAPI.getDashboard();
+            console.log('Dashboard response:', response.data);
             setDashboardData(response.data.data);
-        } catch (error) {
-            console.error('Error fetching dashboard data:', error);
+        } catch (err) {
+            console.error('Failed to fetch dashboard:', err);
+            setError('Failed to load dashboard');
         } finally {
             setLoading(false);
         }
     };
-        const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-PH', {
+
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'PHP',
+            currency: 'USD',
         }).format(amount || 0);
     };
 
     if (loading) {
-        return <div className="loading">Loading...</div>;
+        return (
+            <div className="page-content">
+                <div className="loading">Loading dashboard...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="page-content">
+                <div className="error-message">{error}</div>
+            </div>
+        );
     }
 
     return (
@@ -38,7 +54,7 @@ export default function Dashboard() {
             <header className="page-header">
                 <div className="page-header-content">
                     <div>
-                        <h1 className="page-title">Welcome back, {user?.firstName}!</h1>
+                        <h1 className="page-title">Welcome back, {user?.firstName || 'User'}!</h1>
                         <p className="page-subtitle">Here's your financial overview</p>
                     </div>
                 </div>
@@ -88,13 +104,13 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Accounts */}
+                {/* Accounts Section */}
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">Your Accounts</h3>
                     </div>
                     <div className="card-body">
-                        {dashboardData?.accounts?.length > 0 ? (
+                        {dashboardData?.accounts && dashboardData.accounts.length > 0 ? (
                             <div className="accounts-list">
                                 {dashboardData.accounts.map((account) => (
                                     <div key={account.id} className="account-item">
@@ -114,15 +130,15 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Recent Transactions */}
+                {/* Recent Transactions Section */}
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">Recent Transactions</h3>
                     </div>
                     <div className="card-body">
-                        {dashboardData?.recentTransactions?.length > 0 ? (
+                        {dashboardData?.recentTransactions && dashboardData.recentTransactions.length > 0 ? (
                             <div className="transactions-list">
-                                {dashboard.recentTransactions.map((tx) => (
+                                {dashboardData.recentTransactions.map((tx) => (
                                     <div key={tx.id} className="transaction-item">
                                         <div className="transaction-info">
                                             <h4>{tx.description || tx.transactionType}</h4>
