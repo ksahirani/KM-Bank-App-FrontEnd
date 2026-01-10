@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, use } from "react";
-import { authAPI } from "../services/api";
+import { authAPI, userAPI } from "../services/api";
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
+
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -100,7 +102,7 @@ export const AuthProvider = ({ children }) => {
   };
 
     return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, updateUser, isAdmin, isAuthenticated, isAdmin,}}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, updateUser, isAdmin, isAuthenticated}}>
         {children}          
     </AuthContext.Provider>
     );
