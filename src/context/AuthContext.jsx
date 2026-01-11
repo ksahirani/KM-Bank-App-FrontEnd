@@ -1,16 +1,16 @@
-import { createContext, useContext, useState, useEffect, use } from "react";
-import { authAPI, userAPI } from "../services/api";
+import { createContext, useContext, useState, useEffect } from 'react';
+import { authAPI, userAPI } from '../services/api';
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token"));
-  const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+    useEffect(() => {
         if (token) {
             loadUser();
         } else {
@@ -30,10 +30,10 @@ export const AuthProvider = ({ children }) => {
             const freshUser = response.data.data;
             setUser(freshUser);
             localStorage.setItem('user', JSON.stringify(freshUser));
+            
         } catch (error) {
             console.error('Failed to load user:', error);
-            // If token is invalid, logout
-            if (error.response?.status === 401) {
+            if (error.response?.status === 401 || error.response?.status === 403) {
                 logout();
             }
         } finally {
@@ -41,41 +41,67 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const login = async (credentials) => {
+        const response = await authAPI.login(credentials);
+        console.log('Full login response:', response.data);
+        
+        // The response structure is: { success, message, data: { token, type, user } }
+        const responseData = response.data.data;
+        const tokenValue = responseData.token;
+        const userData = responseData.user;
 
-  const login = async (email, password) => {
-    const response = await authAPI.login({email, password});
-    const {token, user} = response.data.data;
+        console.log('Extracted token:', tokenValue);
+        console.log('Extracted user:', userData);
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
+        if (!tokenValue) {
+            throw new Error('No token received from server');
+        }
 
-    setToken(token);
-    setUser(user);
+        // Save token first
+        localStorage.setItem('token', tokenValue);
+        setToken(tokenValue);
 
-    return user;
-  };
+        // Save user data
+        if (userData) {
+            localStorage.setItem('user', JSON.stringify(userData));
+            setUser(userData);
+            return userData;  // Return the user data
+        }
+
+        return null;
+    };
 
     const register = async (data) => {
-    const response = await authAPI.register(data);
-    const {token, user} = response.data.data;
+        const response = await authAPI.register(data);
+        console.log('Full register response:', response.data);
+        
+        const responseData = response.data.data;
+        const tokenValue = responseData.token;
+        const userData = responseData.user;
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
+        if (!tokenValue) {
+            throw new Error('No token received from server');
+        }
 
-    setToken(token);
-    setUser(user);
+        localStorage.setItem('token', tokenValue);
+        setToken(tokenValue);
 
-    return user;
-  };
-  
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setToken(null);
-    setUser(null);
-  };
+        if (userData) {
+            localStorage.setItem('user', JSON.stringify(userData));
+            setUser(userData);
+            return userData;
+        }
 
-  // New function to refresh user data
+        return null;
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
+    };
+
     const refreshUser = async () => {
         try {
             const response = await userAPI.getProfile();
@@ -89,21 +115,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // New function to update user locally (for immediate UI update)
-    const updateUser = (updatedUser) => {
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-    };
-    
     const isAuthenticated = () => !!token && !!user;
+    const isAdmin = () => user?.role === 'ADMIN';
 
-    const isAdmin = () => {
-    return user?.role === "ADMIN";
-  };
+    const value = {
+        user,
+        token,
+        loading,
+        login,
+        register,
+        logout,
+        refreshUser,
+        isAuthenticated,
+        isAdmin,
+    };
 
     return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser, updateUser, isAdmin, isAuthenticated}}>
-        {children}          
-    </AuthContext.Provider>
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
     );
 };

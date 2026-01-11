@@ -18,7 +18,7 @@ export default function Settings() {
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
         newPassword: '',
-        confirmNewPassword: '',
+        confirmPassword: '',
     });
 
     const [loadingProfile, setLoadingProfile] = useState(false);
@@ -58,8 +58,25 @@ export default function Settings() {
 
     const handlePasswordSubmit = async (e) => {
         e.preventDefault();
-        if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-            return error('New passwords do not match');
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            error('New passwords do not match');
+            return;
+        }
+
+        if (!passwordData.newPassword) {
+            error('Please enter a new password');
+            return;
+        }
+        
+        if (passwordData.newPassword.length < 8) {
+            error('New password must be at least 8 characters');
+            return;
+        }
+        
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            error('New passwords do not match');
+            return;
         }
         
         setLoadingPassword(true);
@@ -73,7 +90,7 @@ export default function Settings() {
             setPasswordData({
                 currentPassword: '',
                 newPassword: '',
-                confirmNewPassword: '',
+                confirmPassword: '',
             });
         } catch (err) {
             error(err.response?.data?.message || 'Failed to change password');

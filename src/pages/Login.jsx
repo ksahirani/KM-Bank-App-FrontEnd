@@ -5,8 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { Landmark, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({ email: '', password: '', });
     const [showPassword, setShowPassword] = useState(false);
     const [ loading, setLoading ] = useState(false);
 
@@ -14,16 +13,25 @@ export default function Login() {
     const { success, error } = useToast();
     const navigate = useNavigate();
 
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const user = await login(email, password);
-            success(`Welcome back, ${user.name}!`);
+            const userData = await login(formData);
+            const userName = userData?.firstName || 'User';
+            success(`Welcome back, ${userName}!`);
             navigate('/dashboard');
+
         } catch (err) {
-            error(err.message?.data?.message || 'Login failed. Please try again.');
+            error(err.response?.data?.message || 'Invalid email or password');
         } finally {
             setLoading(false);
         }
@@ -48,8 +56,9 @@ export default function Login() {
                             <input
                                 type="email"
                                 id="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
                                 placeholder="Enter your email"
                                 required
                             />
@@ -63,16 +72,16 @@ export default function Login() {
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 id="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
                                 placeholder="Enter your password"
                                 required
                             />
                             <button
                                 type="button"
                                 className="password-toggle"
-                                onClick={() => setShowPassword(!showPassword)}
-                            >
+                                onClick={() => setShowPassword(!showPassword)}>
                                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </div>
